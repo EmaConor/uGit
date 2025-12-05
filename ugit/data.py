@@ -11,20 +11,23 @@ def init ():
     os.makedirs(GIT_DIR, exist_ok=True)
     os.makedirs(f'{GIT_DIR}/objects', exist_ok=True)
 
-def set_HEAD(oid):
+def update_ref(ref, oid):
     """
     Update HEAD to point to the given commit object ID.
-    """    
-    with open(f'{GIT_DIR}/HEAD', 'w') as f:
+    """
+    ref_path = f'{GIT_DIR}/{ref}'
+    os.makedirs(os.path.dirname(ref_path), exist_ok=True)
+    with open(ref_path, 'w') as f:
         f.write(oid)
 
-def get_HEAD():
+def get_ref(ref):
     """
     Retrieve the current commit ID from HEAD.
     Returns None if HEAD does not exist.
     """
-    if os.path.isfile(f'{GIT_DIR}/HEAD'):
-        with open(f'{GIT_DIR}/HEAD', 'r') as f:
+    ref_path = f'{GIT_DIR}/{ref}'
+    if os.path.isfile(ref_path):
+        with open(ref_path, 'r') as f:
             return f.read().strip()  
 
 def hash_object (data, type='blob'):

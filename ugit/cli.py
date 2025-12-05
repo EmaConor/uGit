@@ -15,6 +15,8 @@ def parse_args ():
     commands = parser.add_subparsers(title='Commands', dest='command')
     commands.required = True
     
+    oid = base.get_oid
+    
     init_parser = commands.add_parser('init', help='Initialize a new repository')
     init_parser.set_defaults(func=init)
     
@@ -24,14 +26,14 @@ def parse_args ():
     
     cat_file_parser = commands.add_parser('cat-file', help='Provide content of repository objects')
     cat_file_parser.set_defaults(func=cat_file)
-    cat_file_parser.add_argument('object', help='The object ID to display')
+    cat_file_parser.add_argument('object', type=oid, help='The object ID to display')
     
     write_tree_parser = commands.add_parser('write-tree', help='Write the current directory as a tree object')
     write_tree_parser.set_defaults(func=write_tree)
     
     read_tree_parser = commands.add_parser('read-tree', help='Read a tree object into the working directory')
     read_tree_parser.set_defaults(func=read_tree)
-    read_tree_parser.add_argument('tree', help='The tree object ID to read')
+    read_tree_parser.add_argument('tree', type=oid, help='The tree object ID to read')
     
     commit_parser = commands.add_parser('commit', help='Create a new commit object')
     commit_parser.set_defaults(func=commit)
@@ -39,13 +41,16 @@ def parse_args ():
     
     log_parser = commands.add_parser('log', help='Display commit logs')
     log_parser.set_defaults(func=log)
-    log_parser.add_argument('oid', nargs='?', help='The commit object ID to start from')
+    log_parser.add_argument('oid', type=oid, nargs='?', help='The commit object ID to start from')
     
     checkout_parser = commands.add_parser('checkout', help='Checkout a commit into the working directory')
     checkout_parser.set_defaults(func=checkout)
-    checkout_parser.add_argument('oid', help='The commit object ID to checkout')
+    checkout_parser.add_argument('oid', type=oid, help='The commit object ID to checkout')
     
-
+    tag_parser = commands.add_parser('tag', help='Create a new tag object')
+    tag_parser.set_defaults(func=tag)
+    tag_parser.add_argument('name', help='The name of the tag')
+    tag_parser.add_argument('oid', type=oid, nargs='?', help='The object ID the tag points to')
     
     return parser.parse_args()
 
@@ -112,7 +117,7 @@ def log (args):
     traverse the commit history and print each commit's ID and message)
         Usage: ugit log [<oid>]
     """
-    oid = args.oid or data.get_HEAD()
+    oid = args.oid or data.get_ref('HEAD')
     while oid:
         commit = base.get_commit(oid)
         print(f'commit {oid}\n')
@@ -128,3 +133,11 @@ def checkout (args):
     """
     base.checkout(args.oid)
 
+def tag (args):
+    """
+    Create a new tag object (create a tag with the given name pointing to the specified object ID,
+    store it in .ugit/objects/)
+        Usage: ugit tag <name> <oid>
+    """
+    oid = args.oid or data.get_ref('HEAD')
+    base.created_tag(args.name, oid)

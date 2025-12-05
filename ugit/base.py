@@ -1,3 +1,4 @@
+
 import os
 import itertools
 import operator
@@ -104,7 +105,7 @@ def commit(message):
     """
     commit = f'tree {write_tree()}\n'
     
-    HEAD = data.get_HEAD()
+    HEAD = data.get_ref('HEAD')
     if HEAD:
         commit += f'parent {HEAD}\n'
     
@@ -112,7 +113,7 @@ def commit(message):
     commit += f'\n{message}\n'
 
     oid = data.hash_object(commit.encode(), 'commit')
-    data.set_HEAD(oid)
+    data.update_ref('HEAD', oid)
     return oid
 
 Commit = namedtuple('Commit', ['tree', 'parent', 'message'])
@@ -145,10 +146,21 @@ def checkout(oid):
     """
     commit = get_commit(oid)
     read_tree(commit.tree)
-    data.set_HEAD(oid)
+    data.update_ref('HEAD', oid)
 
+def created_tag(name, oid):
+    """
+    Create a tag object.
+    Stores a tag with the given name pointing to the specified object ID.
+    """
+    data.update_ref(f'refs/tags/{name}', oid)
 
-
+def get_oid(name):
+    """
+    Retrieve the object ID for a given tag name.
+    Returns None if the tag does not exist.
+    """
+    return data.get_ref(name) or data.get_ref(f'refs/tags/{name}') or name 
 
 def is_ignored(path):
     """
