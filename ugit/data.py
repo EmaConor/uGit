@@ -4,19 +4,36 @@ import hashlib
 GIT_DIR = '.ugit'
 
 def init ():
+    """
+    Initialize repository storage.
+    Creates `.ugit` and `.ugit/objects` directories if they do not exist.
+    """
     os.makedirs(GIT_DIR, exist_ok=True)
     os.makedirs(f'{GIT_DIR}/objects', exist_ok=True)
 
 def set_HEAD(oid):
+    """
+    Update HEAD to point to the given commit object ID.
+    """    
     with open(f'{GIT_DIR}/HEAD', 'w') as f:
         f.write(oid)
 
 def get_HEAD():
+    """
+    Retrieve the current commit ID from HEAD.
+    Returns None if HEAD does not exist.
+    """
     if os.path.isfile(f'{GIT_DIR}/HEAD'):
         with open(f'{GIT_DIR}/HEAD', 'r') as f:
             return f.read().strip()  
 
 def hash_object (data, type='blob'):
+    """
+    Store an object in `.ugit/objects`.
+    Prepends the type (blob/tree/commit) to the data,
+    computes its SHA-1 hash, saves it under `.ugit/objects/<oid>`,
+    and returns the object ID.
+    """
     obj = type.encode() + b'\x00' + data
     oid = hashlib.sha1(obj).hexdigest()
     with open(f'{GIT_DIR}/objects/{oid}', 'wb') as out:
@@ -24,6 +41,11 @@ def hash_object (data, type='blob'):
     return oid
 
 def get_object (oid, expected ='blob'):
+    """
+    Retrieve an object by its ID.
+    Reads the object from `.ugit/objects/<oid>`, validates its type,
+    and returns its content.
+    """
     with open (f'{GIT_DIR}/objects/{oid}', 'rb') as f:
         obj = f.read()
     

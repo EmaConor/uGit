@@ -41,30 +41,77 @@ def parse_args ():
     log_parser.set_defaults(func=log)
     log_parser.add_argument('oid', nargs='?', help='The commit object ID to start from')
     
+    checkout_parser = commands.add_parser('checkout', help='Checkout a commit into the working directory')
+    checkout_parser.set_defaults(func=checkout)
+    checkout_parser.add_argument('oid', help='The commit object ID to checkout')
+    
+
+    
     return parser.parse_args()
 
+# Command implementations
+    
 def init (args):
+    """
+    Initialize a new repository (create .ugit directory 
+    where objects will be stored (blobs, trees, commits))
+        Usage: ugit init   
+    """
     data.init()
     print (f'Initializing empty ugit repository in {os.getcwd()}/{data.GIT_DIR}')
 
 def hash_object (args):
+    """
+    Hash a  file and store it as a blob object (read file in binary mode, 
+    compute its SHA-1 hash, store it in .ugit/objects/ and print the object ID)
+        Usage: ugit hash-object <file>
+    """
     with open(args.file, 'rb') as f:
         print(data.hash_object(f.read()))
 
 def cat_file (args):
+    """
+    Display the content of a repository object (given its object ID,
+    read the corresponding file from .ugit/objects/ and print its content)
+        Usage: ugit cat-file <object>
+    """
     sys.stdout.flush()
     sys.stdout.buffer.write(data.get_object(args.object, expected=None))
 
+    
 def write_tree (args):
+    """
+    Write the current directory as a tree object (traverse the current directory,
+    create blob objects for files and tree objects for subdirectories,
+    store them in .ugit/objects/ and print the tree object ID)
+        Usage: ugit write-tree
+    """    
     print(base.write_tree())
 
 def read_tree (args):
+    """
+    Read a tree object into the working directory (given a tree object ID,
+    clear the current directory and recreate files and directories   
+    according to the tree object)
+        Usage: ugit read-tree <tree>
+    """
     base.read_tree(args.tree)
 
 def commit (args):
+    """
+    Create a new commit object (create a commit object with the current tree,
+    the parent commit (if any) and the given commit message, updates HEAD to point to the new commit.
+    store it in .ugit/objects/ and print the commit object ID)
+        Usage: ugit commit -m <message>
+    """
     print(base.commit(args.message))
 
 def log (args):
+    """
+    Display commit logs (starting from the given commit object ID or HEAD,
+    traverse the commit history and print each commit's ID and message)
+        Usage: ugit log [<oid>]
+    """
     oid = args.oid or data.get_HEAD()
     while oid:
         commit = base.get_commit(oid)
@@ -72,3 +119,12 @@ def log (args):
         print(textwrap.indent(commit.message.strip(), '    '))
         print()
         oid = commit.parent
+
+def checkout (args):
+    """
+    Checkout a commit into the working directory (Restores the working directory to
+    the state of the given commit ID and updates HEAD to point to that commit.
+        Usage: ugit checkout <oid>
+    """
+    base.checkout(args.oid)
+
