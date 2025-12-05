@@ -2,6 +2,7 @@ import os
 import argparse
 import sys
 import textwrap
+import subprocess
 
 from . import data, base
 
@@ -51,6 +52,9 @@ def parse_args ():
     tag_parser.set_defaults(func=tag)
     tag_parser.add_argument('name', help='The name of the tag')
     tag_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object ID the tag points to')
+    
+    k_parser = commands.add_parser('k', help='')
+    k_parser.set_defaults(func=k)
     
     return parser.parse_args()
 
@@ -140,3 +144,36 @@ def tag (args):
         Usage: ugit tag <name> <oid>
     """
     base.created_tag(args.name, args.oid)
+
+def k (args):
+    """
+    Display a simplified commit graph (prints all references and their object IDs,
+    then traverses all commits reachable from those references, printing each commit's ID and its parent commit ID)
+        Usage: ugit k
+    """
+    dot = 'digraph commits {\n'
+    
+    oids = set()
+    for refname, ref in data.iter_refs():
+        dot += f'"{refname}" [shape=box];\n'
+        dot += f'"{refname}" -> "{ref}";\n'
+        oids.add(ref)
+    
+    for oid in base.iter_commits_and_parents(oids):
+        commit = base.get_commit(oid)
+        dot += f'"{oid}" [shape=oval style=filled label="{oid[:10]}"];\n'
+        if commit.parent:
+            dot += f'"{oid}" -> "{commit.parent}";\n'
+    
+    dot += '}\n'
+    print(dot)
+    
+    with subprocess.Popen(
+        ['dot', '-Tpng'], 
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE
+    ) as proc:
+        out, _ = proc.communicate(dot.encode())
+        with open('commit-graph.png', 'wb') as f:
+            f.write(out)
+

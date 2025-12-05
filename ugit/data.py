@@ -58,3 +58,16 @@ def get_object (oid, expected ='blob'):
     if expected is not None:
         assert type_ == expected, f'Expected object of type {expected}, got {type_}'
     return content
+
+def iter_refs():
+    """
+    Iterate over all references in the repository.
+    Yields tuples of (refname, refvalue).
+    """
+    refs = ['HEAD']
+    for root, _, filesnames in os.walk(f'{GIT_DIR}/refs'):
+        root = os.path.relpath(root, GIT_DIR)
+        refs.extend(f'{root}/{names}' for names in filesnames)
+    
+    for refnames in refs:
+        yield refnames, get_ref(refnames)

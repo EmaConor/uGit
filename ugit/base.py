@@ -177,6 +177,23 @@ def get_oid(name):
     
     assert False, f'Unknown name: {name}'
 
+def iter_commits_and_parents(oids):
+    """
+    Iterate over commits and their parents.
+    Given a list of commit object IDs, yields each commit ID and its ancestors.
+    """
+    oids = set(oids)
+    visited = set()
+    
+    while oids:
+        oid = oids.pop()
+        if not oid or oid in visited:
+            continue
+        visited.add(oid)
+        yield oid
+        commit = get_commit(oid)
+        oid = commit.parent
+
 def is_ignored(path):
     """
     Determine if a path should be ignored.
