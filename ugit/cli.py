@@ -41,7 +41,7 @@ def parse_args ():
     
     log_parser = commands.add_parser('log', help='Display commit logs')
     log_parser.set_defaults(func=log)
-    log_parser.add_argument('oid', type=oid, nargs='?', help='The commit object ID to start from')
+    log_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The commit object ID to start from')
     
     checkout_parser = commands.add_parser('checkout', help='Checkout a commit into the working directory')
     checkout_parser.set_defaults(func=checkout)
@@ -50,7 +50,7 @@ def parse_args ():
     tag_parser = commands.add_parser('tag', help='Create a new tag object')
     tag_parser.set_defaults(func=tag)
     tag_parser.add_argument('name', help='The name of the tag')
-    tag_parser.add_argument('oid', type=oid, nargs='?', help='The object ID the tag points to')
+    tag_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object ID the tag points to')
     
     return parser.parse_args()
 
@@ -117,7 +117,7 @@ def log (args):
     traverse the commit history and print each commit's ID and message)
         Usage: ugit log [<oid>]
     """
-    oid = args.oid or data.get_ref('HEAD')
+    oid = args.oid
     while oid:
         commit = base.get_commit(oid)
         print(f'commit {oid}\n')
@@ -139,5 +139,4 @@ def tag (args):
     store it in .ugit/objects/)
         Usage: ugit tag <name> <oid>
     """
-    oid = args.oid or data.get_ref('HEAD')
-    base.created_tag(args.name, oid)
+    base.created_tag(args.name, args.oid)

@@ -1,7 +1,7 @@
-
 import os
 import itertools
 import operator
+import string
 
 from collections import namedtuple
 from . import data
@@ -157,10 +157,25 @@ def created_tag(name, oid):
 
 def get_oid(name):
     """
-    Retrieve the object ID for a given tag name.
-    Returns None if the tag does not exist.
+    Resolve a name to an object ID.
+    Tries various ref formats and checks if the name is a valid SHA-1 hash.
     """
-    return data.get_ref(name) or data.get_ref(f'refs/tags/{name}') or name 
+    if name == '@': name = 'HEAD'
+    
+    refs_to_try = [f'{name}',
+                f'refs/{name}',
+                f'refs/tags/{name}',
+                f'refs/tags/{name}'
+                ]
+    for ref in refs_to_try:
+        if data.get_ref(ref):
+            return data.get_ref(ref)
+    
+    is_hex = all(c in string.hexdigits for c in name)
+    if len(name) == 40 and is_hex:
+        return name
+    
+    assert False, f'Unknown name: {name}'
 
 def is_ignored(path):
     """
