@@ -1,6 +1,8 @@
 import os
 import hashlib
 
+from collections import namedtuple
+
 GIT_DIR = '.ugit'
 
 def init ():
@@ -11,28 +13,43 @@ def init ():
     os.makedirs(GIT_DIR, exist_ok=True)
     os.makedirs(f'{GIT_DIR}/objects', exist_ok=True)
 
-def update_ref(ref, oid):
+RefValue = namedtuple('RefValue', ['symbolic', 'value'])
+def update_ref(ref, value):
     """
-    Update HEAD to point to the given commit object ID.
+    Update a reference to point to a new value.
+    Writes the new value to the corresponding file in `.ugit/refs/`.
     """
+    assert not value.symbolic, "Symbolic refs not supported in update_ref"
+    ref = _get_ref_internal(ref)[0]
     ref_path = f'{GIT_DIR}/{ref}'
     os.makedirs(os.path.dirname(ref_path), exist_ok=True)
     with open(ref_path, 'w') as f:
-        f.write(oid)
+        f.write(value.value)
 
 def get_ref(ref):
     """
-    Retrieve the current commit ID from HEAD.
-    Returns None if HEAD does not exist.
+    Retrieve the value of a reference.
+    Returns a RefValue namedtuple indicating if it's symbolic and its value.
     """
+    return _get_ref_internal(ref)[1]
+
+def _get_ref_internal(ref):
+    """
+    Internal helper to retrieve reference value.
+    Handles symbolic references and returns the resolved reference name and value.
+    """ 
     ref_path = f'{GIT_DIR}/{ref}'
     value = None
     if os.path.isfile(ref_path):
         with open(ref_path, 'r') as f:
             value = f.read().strip()
-    if value and value.startswith('ref: '):
-        return get_ref(value.split(' ', 1)[1].strip())
-    return value
+    
+    symbolic = bool(value) and value.startswith('ref: ')
+    if symbolic:
+        value = value.split(' ', 1)[1].strip()
+        return _get_ref_internal(value)
+    
+    return ref, RefValue(symbolic=False, value=value)
 
 def hash_object (data, type='blob'):
     """

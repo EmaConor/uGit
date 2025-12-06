@@ -105,7 +105,7 @@ def commit(message):
     """
     commit = f'tree {write_tree()}\n'
     
-    HEAD = data.get_ref('HEAD')
+    HEAD = data.get_ref('HEAD').value
     if HEAD:
         commit += f'parent {HEAD}\n'
     
@@ -113,7 +113,7 @@ def commit(message):
     commit += f'\n{message}\n'
 
     oid = data.hash_object(commit.encode(), 'commit')
-    data.update_ref('HEAD', oid)
+    data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
     return oid
 
 Commit = namedtuple('Commit', ['tree', 'parent', 'message'])
@@ -146,14 +146,14 @@ def checkout(oid):
     """
     commit = get_commit(oid)
     read_tree(commit.tree)
-    data.update_ref('HEAD', oid)
+    data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
 
 def created_tag(name, oid):
     """
     Create a tag object.
     Stores a tag with the given name pointing to the specified object ID.
     """
-    data.update_ref(f'refs/tags/{name}', oid)
+    data.update_ref(f'refs/tags/{name}', data.RefValue(symbolic=False, value=oid))
 
 def get_oid(name):
     """
@@ -168,8 +168,8 @@ def get_oid(name):
                 f'refs/tags/{name}'
                 ]
     for ref in refs_to_try:
-        if data.get_ref(ref):
-            return data.get_ref(ref)
+        if data.get_ref(ref).value:
+            return data.get_ref(ref).value
     
     is_hex = all(c in string.hexdigits for c in name)
     if len(name) == 40 and is_hex:
@@ -199,7 +199,7 @@ def create_branch(name, oid):
     Create a new branch.
     Updates the reference for the branch name to point to the given object ID.
     """
-    data.update_ref(f'refs/heads/{name}', oid)
+    data.update_ref(f'refs/heads/{name}', data.RefValue(symbolic=False, value=oid))
 
 def is_ignored(path):
     """
