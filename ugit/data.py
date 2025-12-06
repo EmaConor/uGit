@@ -87,7 +87,7 @@ def get_object (oid, expected ='blob'):
         assert type_ == expected, f'Expected object of type {expected}, got {type_}'
     return content
 
-def iter_refs(deref=True):
+def iter_refs(prefix='', deref=True):
     """
     Iterate over all references in the repository.
     Yields tuples of (refname, refvalue).
@@ -97,5 +97,8 @@ def iter_refs(deref=True):
         root = os.path.relpath(root, GIT_DIR)
         refs.extend(f'{root}/{names}' for names in filesnames)
     
-    for refnames in refs:
-        yield refnames, get_ref(refnames, deref=deref)
+    for refname in refs:
+        refname = refname.replace('\\', '/')
+        if not refname.startswith(prefix):
+            continue
+        yield refname, get_ref(refname, deref=deref)

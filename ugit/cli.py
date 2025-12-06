@@ -58,8 +58,11 @@ def parse_args ():
     
     branch_parser = commands.add_parser('branch', help='Create a new branch')
     branch_parser.set_defaults(func=branch)
-    branch_parser.add_argument('name', help='The name of the branch')
+    branch_parser.add_argument('name', nargs='?', help='The name of the branch to create')
     branch_parser.add_argument('start_point', default='@', type=oid, nargs='?', help='The object ID the branch points to')
+    
+    status_parser = commands.add_parser('status', help='Show the working tree status')
+    status_parser.set_defaults(func=status)
     
     return parser.parse_args()
 
@@ -67,11 +70,11 @@ def parse_args ():
     
 def init (args):
     """
-    Initialize a new repository (create .ugit directory 
-    where objects will be stored (blobs, trees, commits))
+    Initialize a new repository.
+    Creates the .ugit directory structure.
         Usage: ugit init   
     """
-    data.init()
+    base.init()
     print (f'Initializing empty ugit repository in {os.getcwd()}/{data.GIT_DIR}')
 
 def hash_object (args):
@@ -126,9 +129,15 @@ def log (args):
     traverse the commit history and print each commit's ID and message)
         Usage: ugit log [<oid>]
     """
+    refs = {}
+    for refname, ref in data.iter_refs():
+        refs.setdefault(ref.value, []).append(refname)
+
     for oid in base.iter_commits_and_parents([args.oid]):
         commit = base.get_commit(oid)
-        print(f'commit {oid}\n')
+        
+        refs_str = f' ({", ".join(refs[oid])})' if oid in refs else ''
+        print(f'commit {oid}{refs_str}\n')
         print(textwrap.indent(commit.message.strip(), '    '))
         print('')
 
@@ -187,6 +196,25 @@ def branch (args):
     Updates the reference for the branch name to point to the given object ID.
         Usage: ugit branch <name> <oid>
     """
-    base.create_branch(args.name, args.start_point)
-    print(f'Branch {args.name} created at {args.start_point}')
+    if not args.name:
+        current = base.get_branch_name()
+        for branch in base.iter_branch_names():
+            prefix = '*' if branch == current else ' '
+            print(f'{prefix} {branch}')
+    else:
+        base.create_branch(args.name, args.start_point)
+        print(f'Branch {args.name} created at {args.start_point[:10]}')
 
+def status (args):
+    """
+    Show the working tree status.
+    Compares the current working directory with the index and HEAD commit,
+    and prints the status of files (modified, staged, untracked).
+        Usage: ugit status
+    """
+    HEAD = base.get_oid('@')
+    branch = base.get_branch_name()
+    if branch:
+        print(f'On branch {branch}')
+    else:
+        print(f'HEAD detached at {HEAD}')

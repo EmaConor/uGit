@@ -6,6 +6,14 @@ import string
 from collections import deque, namedtuple
 from . import data
 
+def init():
+    """
+    Initialize a new repository.
+    Creates the .ugit directory structure.
+    """
+    data.init()
+    data.update_ref('HEAD', data.RefValue(symbolic=True, value='refs/heads/main'))
+
 def write_tree(directory='.'):
     """
     Write the current directory as a tree object.
@@ -213,6 +221,26 @@ def is_branch(branch):
     Returns True if the branch reference exists.
     """
     return data.get_ref(f'refs/heads/{branch}').value is not None
+
+def get_branch_name():   
+    """
+    Get the current branch name.
+    Returns the branch name if HEAD is symbolic, otherwise None.
+    """
+    HEAD = data.get_ref('HEAD', deref=False)
+    if not HEAD.symbolic:
+        return None
+    HEAD = HEAD.value
+    assert HEAD.startswith('refs/heads/')
+    return os.path.relpath(HEAD, 'refs/heads/')
+
+def iter_branch_names():
+    """
+    Iterate over all branch names.
+    Yields the names of all branches in refs/heads.
+    """
+    for refname, _ in data.iter_refs('refs/heads/'):
+        yield os.path.relpath(refname, f'refs/heads/')
 
 def is_ignored(path):
     """
