@@ -3,7 +3,7 @@ import itertools
 import operator
 import string
 
-from collections import namedtuple
+from collections import deque, namedtuple
 from . import data
 
 def write_tree(directory='.'):
@@ -182,17 +182,24 @@ def iter_commits_and_parents(oids):
     Iterate over commits and their parents.
     Given a list of commit object IDs, yields each commit ID and its ancestors.
     """
-    oids = set(oids)
+    oids = deque(oids)
     visited = set()
     
     while oids:
-        oid = oids.pop()
+        oid = oids.popleft()
         if not oid or oid in visited:
             continue
         visited.add(oid)
         yield oid
         commit = get_commit(oid)
-        oid = commit.parent
+        oids.appendleft(commit.parent)
+
+def create_branch(name, oid):
+    """
+    Create a new branch.
+    Updates the reference for the branch name to point to the given object ID.
+    """
+    data.update_ref(f'refs/heads/{name}', oid)
 
 def is_ignored(path):
     """

@@ -26,9 +26,13 @@ def get_ref(ref):
     Returns None if HEAD does not exist.
     """
     ref_path = f'{GIT_DIR}/{ref}'
+    value = None
     if os.path.isfile(ref_path):
         with open(ref_path, 'r') as f:
-            return f.read().strip()  
+            value = f.read().strip()
+    if value and value.startswith('ref: '):
+        return get_ref(value.split(' ', 1)[1].strip())
+    return value
 
 def hash_object (data, type='blob'):
     """

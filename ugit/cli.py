@@ -56,6 +56,11 @@ def parse_args ():
     k_parser = commands.add_parser('k', help='')
     k_parser.set_defaults(func=k)
     
+    branch_parser = commands.add_parser('branch', help='Create a new branch')
+    branch_parser.set_defaults(func=branch)
+    branch_parser.add_argument('name', help='The name of the branch')
+    branch_parser.add_argument('start_point', default='@', type=oid, nargs='?', help='The object ID the branch points to')
+    
     return parser.parse_args()
 
 # Command implementations
@@ -121,13 +126,11 @@ def log (args):
     traverse the commit history and print each commit's ID and message)
         Usage: ugit log [<oid>]
     """
-    oid = args.oid
-    while oid:
+    for oid in base.iter_commits_and_parents([args.oid]):
         commit = base.get_commit(oid)
         print(f'commit {oid}\n')
         print(textwrap.indent(commit.message.strip(), '    '))
-        print()
-        oid = commit.parent
+        print('')
 
 def checkout (args):
     """
@@ -176,4 +179,13 @@ def k (args):
         out, _ = proc.communicate(dot.encode())
         with open('commit-graph.png', 'wb') as f:
             f.write(out)
+
+def branch (args):
+    """
+    Create a new branch.
+    Updates the reference for the branch name to point to the given object ID.
+        Usage: ugit branch <name> <oid>
+    """
+    base.create_branch(args.name, args.start_point)
+    print(f'Branch {args.name} created at {args.start_point}')
 
