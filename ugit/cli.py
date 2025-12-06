@@ -46,7 +46,7 @@ def parse_args ():
     
     checkout_parser = commands.add_parser('checkout', help='Checkout a commit into the working directory')
     checkout_parser.set_defaults(func=checkout)
-    checkout_parser.add_argument('oid', type=oid, help='The commit object ID to checkout')
+    checkout_parser.add_argument('commit', help='The commit ID or branch name to checkout')
     
     tag_parser = commands.add_parser('tag', help='Create a new tag object')
     tag_parser.set_defaults(func=tag)
@@ -138,7 +138,7 @@ def checkout (args):
     the state of the given commit ID and updates HEAD to point to that commit.
         Usage: ugit checkout <oid>
     """
-    base.checkout(args.oid)
+    base.checkout(args.commit)
 
 def tag (args):
     """
@@ -157,10 +157,11 @@ def k (args):
     dot = 'digraph commits {\n'
     
     oids = set()
-    for refname, ref in data.iter_refs():
+    for refname, ref in data.iter_refs(deref=False):
         dot += f'"{refname}" [shape=box];\n'
         dot += f'"{refname}" -> "{ref.value}";\n'
-        oids.add(ref.value)
+        if not ref.symbolic:
+            oids.add(ref.value)
     
     for oid in base.iter_commits_and_parents(oids):
         commit = base.get_commit(oid)

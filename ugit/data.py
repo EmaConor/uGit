@@ -14,26 +14,32 @@ def init ():
     os.makedirs(f'{GIT_DIR}/objects', exist_ok=True)
 
 RefValue = namedtuple('RefValue', ['symbolic', 'value'])
-def update_ref(ref, value):
+def update_ref(ref, value, deref=True):
     """
-    Update a reference to point to a new value.
-    Writes the new value to the corresponding file in `.ugit/refs/`.
+    Update the value of a reference.
+    If the reference is symbolic, updates the target reference instead.
     """
-    assert not value.symbolic, "Symbolic refs not supported in update_ref"
-    ref = _get_ref_internal(ref)[0]
+    ref = _get_ref_internal(ref, deref)[0]
+    
+    assert value.value
+    if value.symbolic:
+        value = f'ref: {value.value}'
+    else:
+        value = value.value
+    
     ref_path = f'{GIT_DIR}/{ref}'
     os.makedirs(os.path.dirname(ref_path), exist_ok=True)
     with open(ref_path, 'w') as f:
-        f.write(value.value)
+        f.write(value)
 
-def get_ref(ref):
+def get_ref(ref, deref=True):
     """
     Retrieve the value of a reference.
     Returns a RefValue namedtuple indicating if it's symbolic and its value.
     """
-    return _get_ref_internal(ref)[1]
+    return _get_ref_internal(ref, deref)[1]
 
-def _get_ref_internal(ref):
+def _get_ref_internal(ref, deref):
     """
     Internal helper to retrieve reference value.
     Handles symbolic references and returns the resolved reference name and value.
@@ -47,9 +53,10 @@ def _get_ref_internal(ref):
     symbolic = bool(value) and value.startswith('ref: ')
     if symbolic:
         value = value.split(' ', 1)[1].strip()
-        return _get_ref_internal(value)
+        if deref:
+            return _get_ref_internal(value, deref=True)
     
-    return ref, RefValue(symbolic=False, value=value)
+    return ref, RefValue(symbolic=symbolic, value=value)
 
 def hash_object (data, type='blob'):
     """
@@ -80,7 +87,7 @@ def get_object (oid, expected ='blob'):
         assert type_ == expected, f'Expected object of type {expected}, got {type_}'
     return content
 
-def iter_refs():
+def iter_refs(deref=True):
     """
     Iterate over all references in the repository.
     Yields tuples of (refname, refvalue).
@@ -91,4 +98,4 @@ def iter_refs():
         refs.extend(f'{root}/{names}' for names in filesnames)
     
     for refnames in refs:
-        yield refnames, get_ref(refnames)
+        yield refnames, get_ref(refnames, deref=deref)

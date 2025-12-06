@@ -138,15 +138,21 @@ def get_commit(oid):
     message = '\n'.join(lines)
     return Commit(tree=tree, parent=parent, message=message)
 
-def checkout(oid):
+def checkout(name):
     """
     Checkout a commit.
     Restores the working directory to the state of the commit's tree
     and updates HEAD to point to the commit.
     """
+    oid = get_oid(name)
     commit = get_commit(oid)
     read_tree(commit.tree)
-    data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
+    
+    if is_branch(name):
+        HEAD = data.RefValue(symbolic=True, value=f'refs/heads/{name}')
+    else:
+        HEAD = data.RefValue(symbolic=False, value=oid)
+    data.update_ref('HEAD', HEAD, deref=False)
 
 def created_tag(name, oid):
     """
@@ -168,7 +174,7 @@ def get_oid(name):
                 f'refs/tags/{name}'
                 ]
     for ref in refs_to_try:
-        if data.get_ref(ref).value:
+        if data.get_ref(ref, deref=False).value:
             return data.get_ref(ref).value
     
     is_hex = all(c in string.hexdigits for c in name)
@@ -200,6 +206,13 @@ def create_branch(name, oid):
     Updates the reference for the branch name to point to the given object ID.
     """
     data.update_ref(f'refs/heads/{name}', data.RefValue(symbolic=False, value=oid))
+
+def is_branch(branch):
+    """
+    Check if a branch exists.
+    Returns True if the branch reference exists.
+    """
+    return data.get_ref(f'refs/heads/{branch}').value is not None
 
 def is_ignored(path):
     """
