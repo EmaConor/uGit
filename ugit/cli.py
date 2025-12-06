@@ -64,6 +64,10 @@ def parse_args ():
     status_parser = commands.add_parser('status', help='Show the working tree status')
     status_parser.set_defaults(func=status)
     
+    reset_parser = commands.add_parser('reset', help='Reset the current HEAD to the specified state')
+    reset_parser.set_defaults(func=reset)
+    reset_parser.add_argument('commit', type=oid, help='The commit ID or branch name to reset to')
+    
     return parser.parse_args()
 
 # Command implementations
@@ -218,3 +222,13 @@ def status (args):
         print(f'On branch {branch}')
     else:
         print(f'HEAD detached at {HEAD}')
+
+def reset (args):
+    """
+    Reset to a specific commit.
+    Restores the working directory to the state of the given commit ID
+    and updates HEAD to point to that commit.
+        Usage: ugit reset <commit>
+    """
+    base.reset(args.commit)
+    print(f'HEAD reset to {args.commit[:10]}')

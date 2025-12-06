@@ -242,6 +242,14 @@ def iter_branch_names():
     for refname, _ in data.iter_refs('refs/heads/'):
         yield os.path.relpath(refname, f'refs/heads/')
 
+def reset(oid):
+    """
+    Reset to a specific commit.
+    Restores the working directory to the state of the given commit ID
+    and updates HEAD to point to that commit.
+    """
+    data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
+
 def is_ignored(path):
     """
     Determine if a path should be ignored.
