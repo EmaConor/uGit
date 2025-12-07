@@ -2,8 +2,17 @@ import os
 import hashlib
 
 from collections import namedtuple
+from contextlib import contextmanager
 
-GIT_DIR = '.ugit'
+GIT_DIR = None
+
+@contextmanager
+def change_git_dir(new_dir):
+    global GIT_DIR
+    old_dir = GIT_DIR
+    GIT_DIR = f'{new_dir}/.ugit'
+    yield
+    GIT_DIR = old_dir
 
 def init ():
     """
