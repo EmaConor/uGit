@@ -4,7 +4,7 @@ import sys
 import textwrap
 import subprocess
 
-from . import data, base
+from . import data, base, diff
 
 def main ():
     args = parse_args()
@@ -67,6 +67,10 @@ def parse_args ():
     reset_parser = commands.add_parser('reset', help='Reset the current HEAD to the specified state')
     reset_parser.set_defaults(func=reset)
     reset_parser.add_argument('commit', type=oid, help='The commit ID or branch name to reset to')
+    
+    show_parser = commands.add_parser('show', help='Show various types of objects')
+    show_parser.set_defaults(func=show)
+    show_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object ID to show')
     
     return parser.parse_args()
 
@@ -140,10 +144,7 @@ def log (args):
     for oid in base.iter_commits_and_parents([args.oid]):
         commit = base.get_commit(oid)
         
-        refs_str = f' ({", ".join(refs[oid])})' if oid in refs else ''
-        print(f'commit {oid}{refs_str}\n')
-        print(textwrap.indent(commit.message.strip(), '    '))
-        print('')
+        _print_commit(oid, commit, refs.get(oid))
 
 def checkout (args):
     """
@@ -232,3 +233,28 @@ def reset (args):
     """
     base.reset(args.commit)
     print(f'HEAD reset to {args.commit[:10]}')
+
+def _print_commit(oid, commit, refs=None):
+    refs_str = f' ({", ".join(refs)})' if refs else ''
+    print(f'commit {oid}{refs_str}\n')
+    print(textwrap.indent(commit.message, '    '))
+    print('')
+
+def show (args):
+    """
+    Show various types of objects.
+    Depending on the object type (blob, tree, commit, tag),
+    displays its content in a human-readable format.
+        Usage: ugit show <oid>
+    """
+    if not args.oid:
+        return
+    commit = base.get_commit(args.oid)
+    
+    parent_tree = None
+    if commit.parent:
+        parent_tree = base.get_commit(commit.parent).tree
+    _print_commit(args.oid, commit)
+    result = diff.diff_trees(base.get_tree(parent_tree), base.get_tree(commit.tree))
+    sys.stdout.flush()
+    sys.stdout.buffer.write(result)
