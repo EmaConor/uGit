@@ -284,6 +284,13 @@ def read_tree_merged(t_HEAD, t_other):
         with open (path, 'wb') as f:
             f.write(blob)
 
+def get_merge_base(oid1, oid2):
+    parents1 = set(iter_commits_and_parents({oid1}))
+    
+    for oid in iter_commits_and_parents({oid2}):
+        if oid in parents1:
+            return oid
+
 def is_ignored(path):
     """
     Determine if a path should be ignored.
