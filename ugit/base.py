@@ -371,3 +371,8 @@ def is_ignored(path):
     ignored_dirs = {'.ugit', '.git', '.venv'}
     parts = os.path.normpath(path).split(os.sep)
     return any(part in ignored_dirs for part in parts)
+
+def get_index_tree():
+    with data.get_index() as index:
+        return index
+
