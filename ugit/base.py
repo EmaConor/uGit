@@ -319,6 +319,9 @@ def get_merge_base(oid1, oid2):
         if oid in parents1:
             return oid
 
+def is_ascestor_of(commit, maybe_ascestor):
+    return maybe_ascestor in iter_commits_and_parents({commit})
+
 def is_ignored(path):
     """
     Determine if a path should be ignored.
