@@ -92,7 +92,7 @@ def parse_args ():
     fetch_parser.add_argument('remote', help='')
     
     push_parser = commands.add_parser('push', help='')
-    push_parser.set_defaults(func='push')
+    push_parser.set_defaults(func=push)
     push_parser.add_argument('remote', help='')
     push_parser.add_argument('branch', help='')
     
@@ -300,23 +300,27 @@ def show (args):
     sys.stdout.buffer.write(result)
 
 def _diff(args):
-    oid = args.commit and base.get_oid(args.commit)
-    
-    if args.commit:
-        tree_from = base.get_tree (oid and base.get_commit (oid).tree)
-    
     if args.cached:
-        tree_to = base.get_index_tree ()
-        if not args.commit:
-            # If no commit was provided, diff from HEAD
-            oid = base.get_oid ('@')
-            tree_from = base.get_tree (oid and base.get_commit (oid).tree)
+        tree_to = base.get_index_tree()
+        if args.commit:
+            # diff index against commit
+            oid = base.get_oid(args.commit)
+            tree_from = base.get_tree(base.get_commit(oid).tree)
         else:
-            tree_to = base.get_working_tree()
-            if not args.commit:
-                tree_from=base.get_index_tree()
-            
-    result = diff.diff_trees (tree_from, tree_to)
+            # diff index against HEAD
+            oid = base.get_oid('@')
+            tree_from = base.get_tree(oid and base.get_commit(oid).tree)
+    else:
+        tree_to = base.get_working_tree()
+        if args.commit:
+            # diff working tree against commit
+            oid = base.get_oid(args.commit)
+            tree_from = base.get_tree(base.get_commit(oid).tree)
+        else:
+            # diff working tree against index
+            tree_from = base.get_index_tree()
+
+    result = diff.diff_trees(tree_from, tree_to)
     sys.stdout.flush()
     sys.stdout.buffer.write(result)
 

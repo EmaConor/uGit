@@ -343,7 +343,6 @@ def is_ascestor_of(commit, maybe_ascestor):
 
 def add(filenames):
     def add_file(filename):
-        print(f'Adding file: {filename}') 
         filename = os.path.relpath(filename).replace(os.sep, '/')
         with open(filename, 'rb') as f:
             oid = data.hash_object(f.read())
@@ -362,15 +361,14 @@ def add(filenames):
             if os.path.isfile(name):
                 add_file(name)
             elif os.path.isdir(name):
-                add_directory(name)
-        print(f'Index after add: {index}')   
+                add_directory(name) 
 
 def is_ignored(path):
     """
     Determine if a path should be ignored.
     Returns True if the path is inside `.ugit`, `.git`, or `.venv`.
     """
-    ignored_dirs = {'.ugit', '.git', '.venv'}
+    ignored_dirs = {'.ugit', '.git', '.venv', '__pycache__'}
     parts = os.path.normpath(path).split(os.sep)
     return any(part in ignored_dirs for part in parts)
 

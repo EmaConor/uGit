@@ -132,8 +132,10 @@ def fetch_objects_if_missing(oid, remote_git_dir):
 
 def push_object(oid, remote_git_dir):
     remote_git_dir += '/.ugit'
+    dest_dir = f'{remote_git_dir}/objects'
+    os.makedirs(dest_dir, exist_ok=True)
     shutil.copy(f'{GIT_DIR}/objects/{oid}',
-                f'{remote_git_dir}/objects/{oid}')
+                f'{dest_dir}/{oid}')
 
 @contextmanager
 def get_index():
