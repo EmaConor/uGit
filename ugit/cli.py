@@ -6,7 +6,7 @@ import subprocess
 
 from sqlalchemy import func
 
-from . import data, base, diff
+from . import data, base, diff, remote
 
 def main ():
     with data.change_git_dir('.'):
@@ -88,6 +88,10 @@ def parse_args ():
     merge_base_parser.set_defaults(func=merge_base)
     merge_base_parser.add_argument('commit1', type=oid, help='')
     merge_base_parser.add_argument('commit2', type=oid, help='')
+    
+    fetch_parser = commands.add_parser('fetch', help='')
+    fetch_parser.set_defaults(func=fetch)
+    fetch_parser.add_argument('remote', help='')
     
     return parser.parse_args()
 
@@ -296,3 +300,6 @@ def merge(args):
 
 def merge_base(args):
     print(base.get_merge_base(args.commit1, args.commit2))
+
+def fetch(args):
+    remote.fetch(args.remote)
