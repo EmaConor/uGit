@@ -1,6 +1,7 @@
 import os
 import hashlib
 import shutil
+import json
 
 from collections import namedtuple
 from contextlib import contextmanager
@@ -133,3 +134,15 @@ def push_object(oid, remote_git_dir):
     remote_git_dir += '/.ugit'
     shutil.copy(f'{GIT_DIR}/objects/{oid}',
                 f'{remote_git_dir}/objects/{oid}')
+
+@contextmanager
+def get_index():
+    index = {}
+    if os.path.isfile(f'{GIT_DIR}/index'):
+        with open(f'{GIT_DIR}/index') as f:
+            index = json.load(f)
+    
+    yield
+    
+    with open(f'{GIT_DIR}/index', 'w') as f:
+        json.dump(index, f)
