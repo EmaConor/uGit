@@ -4,6 +4,8 @@ import sys
 import textwrap
 import subprocess
 
+from sqlalchemy import func
+
 from . import data, base, diff
 
 def main ():
@@ -76,6 +78,10 @@ def parse_args ():
     diff_parser.set_defaults(func=_diff)
     diff_parser.add_argument('commit', default='@', type=oid, nargs='?', help='Commit to compare against (default: HEAD)')
     diff_parser.add_argument('--cached', action='store_true', help='Show staged changes')
+    
+    merge_parser = commands.add_parser('merge', help='')
+    merge_parser.set_defaults(func=merge)
+    merge_parser.add_argument('commit', type=oid, help='')
     
     return parser.parse_args()
 
@@ -275,5 +281,5 @@ def _diff(args):
     sys.stdout.flush()
     sys.stdout.buffer.write(result)
 
-def sdfsdfsdfsdf():
-    print()
+def merge(args):
+    base.merge(args.commit)

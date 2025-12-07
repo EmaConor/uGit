@@ -4,7 +4,7 @@ import operator
 import string
 
 from collections import deque, namedtuple
-from . import data
+from . import data, diff
 
 def init():
     """
@@ -261,6 +261,22 @@ def get_working_tree():
                 result[path] = data.hash_object(f.read())
     return result
 
+def merge(other):
+    HEAD = data.get_ref('HEAD').value
+    assert HEAD
+    c_HEAD = get_commit(HEAD)
+    c_other = get_commit(other)
+    
+    read_tree_merged(c_HEAD.tree, c_other.tree)
+    print('Merged in working tree')
+
+def read_tree_merged(t_HEAD, t_other):
+    _empty_current_directory()
+    for path, blob in diff.merge_trees(get_tree(t_HEAD), get_tree(t_other).items()):
+        os.makedirs(f'./{os.path.dirname(path)}', exist_ok=True)
+        with open (path, 'wb') as f:
+            f.write(blob)
+
 def is_ignored(path):
     """
     Determine if a path should be ignored.
@@ -269,4 +285,3 @@ def is_ignored(path):
     ignored_dirs = {'.ugit', '.git', '.venv'}
     parts = os.path.normpath(path).split(os.sep)
     return any(part in ignored_dirs for part in parts)
-
