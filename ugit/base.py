@@ -18,7 +18,7 @@ def write_tree(directory='.'):
     """
     Write the current directory as a tree object.
     Recursively traverses the directory, hashing files as blobs
-    and subdirectories as trees. Returns the tree object ID.
+    and subdirectories as trees. Returns the tree object ID. 
     """
     entries = []
     with os.scandir(directory) as it:
@@ -37,7 +37,7 @@ def write_tree(directory='.'):
                 oid = write_tree(full)
             entries.append((entry.name, oid, type_))
     
-    tree = ''.join(f'{type_} {oid} {name}' 
+    tree = ''.join(f'{type_} {oid} {name}\n' 
                     for name, oid, type_ 
                     in sorted(entries))
     return data.hash_object(tree.encode(), 'tree')
@@ -45,7 +45,7 @@ def write_tree(directory='.'):
 def _iter_tree_entries(oid):
     """
     Iterate over entries in a tree object.
-    Yields tuples (type, oid, name) for each entry in the tree.
+    Yields tuples (type, oid, name) for each entry in the tree. 
     """
     if not oid:
         return
@@ -62,7 +62,7 @@ def get_tree (oid, base_path=''):
     result = {}
     for type_, oid, name in _iter_tree_entries(oid):
         assert '/' not in name
-        assert name not in ('.', '..')
+        assert name not in ('..', '.')
         path = base_path + name
         if type_ == 'blob':
             result[path] = oid
@@ -250,10 +250,23 @@ def reset(oid):
     """
     data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
 
+def get_working_tree():
+    result = {}
+    for root, _, filenames in os.walk('.'):
+        for filename in filenames:
+            path = os.path.relpath(f'{root}/{filename}').replace(os.sep, '/')
+            if is_ignored(path) or not os.path.isfile(path):
+                continue
+            with open(path, 'rb') as f:
+                result[path] = data.hash_object(f.read())
+    return result
+
 def is_ignored(path):
     """
     Determine if a path should be ignored.
     Returns True if the path is inside `.ugit`, `.git`, or `.venv`.
     """
     ignored_dirs = {'.ugit', '.git', '.venv'}
-    return os.path.basename(path) in ignored_dirs
+    parts = os.path.normpath(path).split(os.sep)
+    return any(part in ignored_dirs for part in parts)
+

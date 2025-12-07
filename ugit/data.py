@@ -63,7 +63,7 @@ def hash_object (data, type='blob'):
     Store an object in `.ugit/objects`.
     Prepends the type (blob/tree/commit) to the data,
     computes its SHA-1 hash, saves it under `.ugit/objects/<oid>`,
-    and returns the object ID.
+    and returns the object ID. 
     """
     obj = type.encode() + b'\x00' + data
     oid = hashlib.sha1(obj).hexdigest()
@@ -75,13 +75,13 @@ def get_object (oid, expected ='blob'):
     """
     Retrieve an object by its ID.
     Reads the object from `.ugit/objects/<oid>`, validates its type,
-    and returns its content.
+    and returns its content. 
     """
     with open (f'{GIT_DIR}/objects/{oid}', 'rb') as f:
         obj = f.read()
     
     type_, _, content = obj.partition(b'\x00')
-    type_ = type_.decode()
+    type_ = type_.decode() 
     
     if expected is not None:
         assert type_ == expected, f'Expected object of type {expected}, got {type_}'

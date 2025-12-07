@@ -7,8 +7,8 @@ from . import data
 
 def compare_trees (*trees):
     """
-    Compare multiple tree dictionaries.
-    Yields tuples of (path, oid1, oid2, ...) for each unique path
+    Compare multiple tree dictionaries. 
+    Yields tuples of (path, oid1, oid2, ...) for each unique path 
     found in any of the provided trees.
     """
     entries = defaultdict(lambda: [None] * len(trees))
@@ -35,7 +35,7 @@ def diff_blobs (o_from, o_to, path='blob'):
     """
     Generate a diff between two blob objects.
     Uses the system `diff` command to compute the differences
-    between the contents of the two blobs.
+    between the contents of the two blobs.   
     """
     with Temp() as f_from, Temp() as f_to:
         for oid, f in [(o_from, f_from), (o_to, f_to)]:
@@ -49,3 +49,9 @@ def diff_blobs (o_from, o_to, path='blob'):
         ) as proc:
             output, _ = proc.communicate()
         return output
+
+def iter_changed_files(t_from, t_to):
+    for path, o_from, o_to in compare_trees(t_from, t_to):
+        if o_from != o_to:
+            action = ('new file' if not o_from else 'deleted' if not o_to else 'modified')
+            yield path, action

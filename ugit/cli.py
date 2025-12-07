@@ -72,6 +72,11 @@ def parse_args ():
     show_parser.set_defaults(func=show)
     show_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object ID to show')
     
+    diff_parser = commands.add_parser('diff', help='Show changes between commits, commit and working tree, etc')
+    diff_parser.set_defaults(func=_diff)
+    diff_parser.add_argument('commit', default='@', type=oid, nargs='?', help='Commit to compare against (default: HEAD)')
+    diff_parser.add_argument('--cached', action='store_true', help='Show staged changes')
+    
     return parser.parse_args()
 
 # Command implementations
@@ -199,7 +204,7 @@ def branch (args):
     """
     Create a new branch.
     Updates the reference for the branch name to point to the given object ID.
-        Usage: ugit branch <name> <oid>
+        Usage: ugit branch <name> <oid> 
     """
     if not args.name:
         current = base.get_branch_name()
@@ -207,7 +212,7 @@ def branch (args):
             prefix = '*' if branch == current else ' '
             print(f'{prefix} {branch}')
     else:
-        base.create_branch(args.name, args.start_point)
+        base.create_branch(args.name, args.start_point) 
         print(f'Branch {args.name} created at {args.start_point[:10]}')
 
 def status (args):
@@ -223,6 +228,10 @@ def status (args):
         print(f'On branch {branch}')
     else:
         print(f'HEAD detached at {HEAD}')
+    print('\nChanges to be committed:\n')
+    HEAD_tree = HEAD and base.get_commit(HEAD).tree
+    for path, action in diff.iter_changed_files(base.get_tree(HEAD_tree), base.get_working_tree()):
+        print(f'{action:>12}: {path}')
 
 def reset (args):
     """
@@ -258,3 +267,13 @@ def show (args):
     result = diff.diff_trees(base.get_tree(parent_tree), base.get_tree(commit.tree))
     sys.stdout.flush()
     sys.stdout.buffer.write(result)
+
+def _diff(args):
+    tree = args.commit and base.get_commit(args.commit).tree
+    
+    result = diff.diff_trees(base.get_tree(tree), base.get_working_tree())
+    sys.stdout.flush()
+    sys.stdout.buffer.write(result)
+
+def sdfsdfsdfsdf():
+    print()
