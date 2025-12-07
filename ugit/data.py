@@ -142,7 +142,7 @@ def get_index():
         with open(f'{GIT_DIR}/index') as f:
             index = json.load(f)
     
-    yield
+    yield index
     
     with open(f'{GIT_DIR}/index', 'w') as f:
         json.dump(index, f)
