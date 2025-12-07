@@ -92,7 +92,7 @@ def iter_refs(prefix='', deref=True):
     Iterate over all references in the repository.
     Yields tuples of (refname, refvalue).
     """
-    refs = ['HEAD']
+    refs = ['HEAD', 'MERGE_HEAD']
     for root, _, filesnames in os.walk(f'{GIT_DIR}/refs'):
         root = os.path.relpath(root, GIT_DIR)
         refs.extend(f'{root}/{names}' for names in filesnames)
@@ -101,4 +101,10 @@ def iter_refs(prefix='', deref=True):
         refname = refname.replace('\\', '/')
         if not refname.startswith(prefix):
             continue
-        yield refname, get_ref(refname, deref=deref)
+        ref = get_ref(refname, deref=deref)
+        if ref.value:
+            yield refname, ref
+
+def delete_ref(ref, deref=True):
+    ref = _get_ref_internal(ref, deref)[0]
+    os.remove(f'{GIT_DIR/{ref}}')
