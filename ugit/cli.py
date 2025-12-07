@@ -4,8 +4,6 @@ import sys
 import textwrap
 import subprocess
 
-from sqlalchemy import func
-
 from . import data, base, diff, remote
 
 def main ():
