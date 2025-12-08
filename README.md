@@ -13,7 +13,7 @@
 
 `ugit` is a minimal yet functional version control system inspired by Git, written in Python. It's designed to be a learning tool that unravels the core concepts behind Git, such as blobs, trees, commits, and branching.
 
-Reference: This project is based on the amazing tutorial by [Andrey Leshenko](https://www.leshenko.net/p/ugit/#).
+Reference: This project is based on the amazing tutorial by [Nikita](https://www.leshenko.net/p/ugit/#).
 
 ## ✨ Features
 
