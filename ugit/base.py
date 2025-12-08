@@ -209,7 +209,7 @@ def get_oid(name):
     
     refs_to_try = [f'{name}',
                 f'refs/{name}',
-                f'refs/tags/{name}',
+                f'refs/heads/{name}',
                 f'refs/tags/{name}'
                 ]
     for ref in refs_to_try:

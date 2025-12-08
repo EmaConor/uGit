@@ -57,7 +57,7 @@ def parse_args ():
     k_parser = commands.add_parser('k', help='Visualize the commit history.')
     k_parser.set_defaults(func=k)
     
-    branch_parser = commands.add_parser('branch', help='List, create, or delete branches.')
+    branch_parser = commands.add_parser('branch', help='List, create')
     branch_parser.set_defaults(func=branch)
     branch_parser.add_argument('name', nargs='?', help='The name of the branch to create.')
     branch_parser.add_argument('start_point', default='@', type=oid, nargs='?', help='The commit to start the new branch from.')
@@ -82,7 +82,7 @@ def parse_args ():
     merge_parser.set_defaults(func=merge)
     merge_parser.add_argument('commit', type=oid, help='The commit to merge into the current branch.')
     
-    merge_base_parser = commands.add_parser('merge-base', help='Find best common ancestor between two commits.')
+    merge_base_parser = commands.add_parser('merge-base', help='Find first common ancestor between two commits.')
     merge_base_parser.set_defaults(func=merge_base)
     merge_base_parser.add_argument('commit1', type=oid, help='The first commit.')
     merge_base_parser.add_argument('commit2', type=oid, help='The second commit.')
