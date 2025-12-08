@@ -10,6 +10,11 @@ GIT_DIR = None
 
 @contextmanager
 def change_git_dir(new_dir):
+    """
+    Context manager to temporarily change the git directory.
+
+    :param new_dir: The new directory to set as the git directory.
+    """
     global GIT_DIR
     old_dir = GIT_DIR
     GIT_DIR = f'{new_dir}/.ugit'
@@ -117,13 +122,31 @@ def iter_refs(prefix='', deref=True):
             yield refname, ref
 
 def delete_ref(ref, deref=True):
+    """
+    Delete a reference.
+
+    :param ref: The reference to delete.
+    :param deref: If True, dereference symbolic refs.
+    """
     ref = _get_ref_internal(ref, deref)[0]
-    os.remove(f'{GIT_DIR/{ref}}')
+    os.remove(f'{GIT_DIR}/{ref}')
 
 def object_exists(oid):
+    """
+    Check if an object exists.
+
+    :param oid: The object ID to check.
+    :return: True if the object exists, False otherwise.
+    """
     return os.path.isfile(f'{GIT_DIR}/objects/{oid}')
 
 def fetch_objects_if_missing(oid, remote_git_dir):
+    """
+    Fetch objects from a remote git directory if they are missing locally.
+
+    :param oid: The object ID to fetch.
+    :param remote_git_dir: The remote git directory to fetch from.
+    """
     if object_exists(oid):
         return
     remote_git_dir += '/.ugit'
@@ -131,6 +154,12 @@ def fetch_objects_if_missing(oid, remote_git_dir):
                 f'{GIT_DIR}/objects/{oid}')
 
 def push_object(oid, remote_git_dir):
+    """
+    Push an object to a remote git directory.
+
+    :param oid: The object ID to push.
+    :param remote_git_dir: The remote git directory to push to.
+    """
     remote_git_dir += '/.ugit'
     dest_dir = f'{remote_git_dir}/objects'
     os.makedirs(dest_dir, exist_ok=True)
@@ -139,6 +168,11 @@ def push_object(oid, remote_git_dir):
 
 @contextmanager
 def get_index():
+    """
+    Context manager for the index file.
+
+    :return: A dictionary representing the index.
+    """
     index = {}
     if os.path.isfile(f'{GIT_DIR}/index'):
         with open(f'{GIT_DIR}/index') as f:

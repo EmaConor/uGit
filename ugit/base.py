@@ -114,6 +114,14 @@ def read_tree(tree_oid, update_working=False):
             _checkout_index(index)
 
 def read_tree_merged(t_base, t_HEAD, t_other, update_working=False):
+    """
+    Merge three trees and update the index.
+
+    :param t_base: The base tree object ID.
+    :param t_HEAD: The HEAD tree object ID.
+    :param t_other: The other tree object ID.
+    :param update_working: If True, update the working directory.
+    """
     with data.get_index() as index:
         index.clear()
         index.update(diff.merge_trees(
@@ -234,6 +242,11 @@ def iter_commits_and_parents(oids):
         oids.extend(commit.parents[:1])
 
 def iter_objects_in_commits(oids):
+    """
+    Iterate over all objects in the given commits.
+
+    :param oids: A list of commit object IDs to start from.
+    """
     visited = set()
     def iter_objects_in_tree(oid):
         visited.add(oid)
@@ -295,6 +308,9 @@ def reset(oid):
     data.update_ref('HEAD', data.RefValue(symbolic=False, value=oid))
 
 def get_working_tree():
+    """
+    Get the working tree as a dictionary of paths to object IDs.
+    """
     result = {}
     for root, _, filenames in os.walk('.'):
         for filename in filenames:
@@ -306,6 +322,11 @@ def get_working_tree():
     return result
 
 def merge(other):
+    """
+    Merge a commit into the current branch.
+
+    :param other: The commit ID to merge.
+    """
     HEAD = data.get_ref('HEAD').value
     assert HEAD
     merge_base = get_merge_base(other, HEAD)
@@ -325,6 +346,11 @@ def merge(other):
     print('Merged in working tree\nPlease commit')
 
 def _checkout_index(index):
+    """
+    Checkout the index into the working directory.
+
+    :param index: The index to checkout.
+    """
     _empty_current_directory()
     for path, oid in index.items():
         os.makedirs (os.path.dirname (f'./{path}'), exist_ok=True)
@@ -332,6 +358,13 @@ def _checkout_index(index):
             f.write(data.get_object(oid,'blob'))
 
 def get_merge_base(oid1, oid2):
+    """
+    Find the merge base of two commits.
+
+    :param oid1: The first commit object ID.
+    :param oid2: The second commit object ID.
+    :return: The merge base commit object ID.
+    """
     parents1 = set(iter_commits_and_parents({oid1}))
     
     for oid in iter_commits_and_parents({oid2}):
@@ -339,9 +372,21 @@ def get_merge_base(oid1, oid2):
             return oid
 
 def is_ascestor_of(commit, maybe_ascestor):
+    """
+    Check if a commit is an ancestor of another commit.
+
+    :param commit: The commit to check.
+    :param maybe_ascestor: The potential ancestor commit.
+    :return: True if it is an ancestor, False otherwise.
+    """
     return maybe_ascestor in iter_commits_and_parents({commit})
 
 def add(filenames):
+    """
+    Add files to the index.
+
+    :param filenames: A list of filenames to add.
+    """
     def add_file(filename):
         filename = os.path.relpath(filename).replace(os.sep, '/')
         with open(filename, 'rb') as f:
@@ -373,6 +418,9 @@ def is_ignored(path):
     return any(part in ignored_dirs for part in parts)
 
 def get_index_tree():
+    """
+    Get the index as a dictionary of paths to object IDs.
+    """
     with data.get_index() as index:
         return index
 

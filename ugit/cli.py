@@ -54,51 +54,51 @@ def parse_args ():
     tag_parser.add_argument('name', help='The name of the tag')
     tag_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object ID the tag points to')
     
-    k_parser = commands.add_parser('k', help='')
+    k_parser = commands.add_parser('k', help='Visualize the commit history.')
     k_parser.set_defaults(func=k)
     
-    branch_parser = commands.add_parser('branch', help='Create a new branch')
+    branch_parser = commands.add_parser('branch', help='List, create, or delete branches.')
     branch_parser.set_defaults(func=branch)
-    branch_parser.add_argument('name', nargs='?', help='The name of the branch to create')
-    branch_parser.add_argument('start_point', default='@', type=oid, nargs='?', help='The object ID the branch points to')
+    branch_parser.add_argument('name', nargs='?', help='The name of the branch to create.')
+    branch_parser.add_argument('start_point', default='@', type=oid, nargs='?', help='The commit to start the new branch from.')
     
-    status_parser = commands.add_parser('status', help='Show the working tree status')
+    status_parser = commands.add_parser('status', help='Show the working-tree status.')
     status_parser.set_defaults(func=status)
     
-    reset_parser = commands.add_parser('reset', help='Reset the current HEAD to the specified state')
+    reset_parser = commands.add_parser('reset', help='Reset current HEAD to the specified state.')
     reset_parser.set_defaults(func=reset)
-    reset_parser.add_argument('commit', type=oid, help='The commit ID or branch name to reset to')
+    reset_parser.add_argument('commit', type=oid, help='The commit to reset to.')
     
-    show_parser = commands.add_parser('show', help='Show various types of objects')
+    show_parser = commands.add_parser('show', help='Show various types of objects.')
     show_parser.set_defaults(func=show)
-    show_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object ID to show')
+    show_parser.add_argument('oid', default='@', type=oid, nargs='?', help='The object to show.')
     
-    diff_parser = commands.add_parser('diff', help='Show changes between commits, commit and working tree, etc')
+    diff_parser = commands.add_parser('diff', help='Show changes between commits, commit and working tree, etc.')
     diff_parser.set_defaults(func=_diff)
-    diff_parser.add_argument('--cached', action='store_true', help='Show staged changes')
-    diff_parser.add_argument('commit', nargs='?', help='Commit to compare against (default: HEAD)')
+    diff_parser.add_argument('--cached', action='store_true', help='Show changes staged for commit.')
+    diff_parser.add_argument('commit', nargs='?', help='The commit to compare against.')
     
-    merge_parser = commands.add_parser('merge', help='')
+    merge_parser = commands.add_parser('merge', help='Join two or more development histories together.')
     merge_parser.set_defaults(func=merge)
-    merge_parser.add_argument('commit', type=oid, help='')
+    merge_parser.add_argument('commit', type=oid, help='The commit to merge into the current branch.')
     
-    merge_base_parser = commands.add_parser('merge-base', help='')
+    merge_base_parser = commands.add_parser('merge-base', help='Find best common ancestor between two commits.')
     merge_base_parser.set_defaults(func=merge_base)
-    merge_base_parser.add_argument('commit1', type=oid, help='')
-    merge_base_parser.add_argument('commit2', type=oid, help='')
+    merge_base_parser.add_argument('commit1', type=oid, help='The first commit.')
+    merge_base_parser.add_argument('commit2', type=oid, help='The second commit.')
     
-    fetch_parser = commands.add_parser('fetch', help='')
+    fetch_parser = commands.add_parser('fetch', help='Download objects and refs from another repository.')
     fetch_parser.set_defaults(func=fetch)
-    fetch_parser.add_argument('remote', help='')
+    fetch_parser.add_argument('remote', help='The remote repository to fetch from.')
     
-    push_parser = commands.add_parser('push', help='')
+    push_parser = commands.add_parser('push', help='Update remote refs along with associated objects.')
     push_parser.set_defaults(func=push)
-    push_parser.add_argument('remote', help='')
-    push_parser.add_argument('branch', help='')
+    push_parser.add_argument('remote', help='The remote repository to push to.')
+    push_parser.add_argument('branch', help='The branch to push.')
     
-    add_parser = commands.add_parser('add', help='')
+    add_parser = commands.add_parser('add', help='Add file contents to the index.')
     add_parser.set_defaults(func=add)
-    add_parser.add_argument('files', nargs='+', help='')
+    add_parser.add_argument('files', nargs='+', help='The files to add.')
     
     return parser.parse_args()
 
@@ -190,11 +190,11 @@ def tag (args):
     """
     base.created_tag(args.name, args.oid)
 
-def k (args):
+def k(args):
     """
-    Display a simplified commit graph (prints all references and their object IDs,
-    then traverses all commits reachable from those references, printing each commit's ID and its parent commit ID)
-        Usage: ugit k
+    Visualize the commit history.
+
+    :param args: The arguments from the command line.
     """
     dot = 'digraph commits {\n'
     
@@ -223,11 +223,11 @@ def k (args):
         with open('commit-graph.png', 'wb') as f:
             f.write(out)
 
-def branch (args):
+def branch(args):
     """
-    Create a new branch.
-    Updates the reference for the branch name to point to the given object ID.
-        Usage: ugit branch <name> <oid> 
+    List, create, or delete branches.
+
+    :param args: The arguments from the command line.
     """
     if not args.name:
         current = base.get_branch_name()
@@ -238,12 +238,11 @@ def branch (args):
         base.create_branch(args.name, args.start_point) 
         print(f'Branch {args.name} created at {args.start_point[:10]}')
 
-def status (args):
+def status(args):
     """
-    Show the working tree status.
-    Compares the current working directory with the index and HEAD commit,
-    and prints the status of files (modified, staged, untracked).
-        Usage: ugit status
+    Show the working-tree status.
+
+    :param args: The arguments from the command line.
     """
     HEAD = base.get_oid('@')
     branch = base.get_branch_name()
@@ -264,28 +263,33 @@ def status (args):
     for path, action in diff.iter_changed_files (base.get_index_tree (), base.get_working_tree ()):
         print (f'{action:>12}: {path}')
 
-def reset (args):
+def reset(args):
     """
-    Reset to a specific commit.
-    Restores the working directory to the state of the given commit ID
-    and updates HEAD to point to that commit.
-        Usage: ugit reset <commit>
+    Reset current HEAD to the specified state.
+
+    :param args: The arguments from the command line.
     """
     base.reset(args.commit)
     print(f'HEAD reset to {args.commit[:10]}')
 
 def _print_commit(oid, commit, refs=None):
+    """
+    Print a commit.
+
+    :param oid: The commit object ID.
+    :param commit: The commit object.
+    :param refs: A list of refs pointing to the commit.
+    """
     refs_str = f' ({", ".join(refs)})' if refs else ''
     print(f'commit {oid}{refs_str}\n')
     print(textwrap.indent(commit.message, '    '))
     print('')
 
-def show (args):
+def show(args):
     """
     Show various types of objects.
-    Depending on the object type (blob, tree, commit, tag),
-    displays its content in a human-readable format.
-        Usage: ugit show <oid>
+
+    :param args: The arguments from the command line.
     """
     if not args.oid:
         return
@@ -300,6 +304,11 @@ def show (args):
     sys.stdout.buffer.write(result)
 
 def _diff(args):
+    """
+    Show changes between commits, commit and working tree, etc.
+
+    :param args: The arguments from the command line.
+    """
     if args.cached:
         tree_to = base.get_index_tree()
         if args.commit:
@@ -325,16 +334,41 @@ def _diff(args):
     sys.stdout.buffer.write(result)
 
 def merge(args):
+    """
+    Join two or more development histories together.
+
+    :param args: The arguments from the command line.
+    """
     base.merge(args.commit)
 
 def merge_base(args):
+    """
+    Find best common ancestor between two commits.
+
+    :param args: The arguments from the command line.
+    """
     print(base.get_merge_base(args.commit1, args.commit2))
 
 def fetch(args):
+    """
+    Download objects and refs from another repository.
+
+    :param args: The arguments from the command line.
+    """
     remote.fetch(args.remote)
 
 def push(args):
+    """
+    Update remote refs along with associated objects.
+
+    :param args: The arguments from the command line.
+    """
     remote.push(args.remote, f'refs/heads/{args.branch}')
 
 def add(args):
+    """
+    Add file contents to the index.
+
+    :param args: The arguments from the command line.
+    """
     base.add(args.files)
